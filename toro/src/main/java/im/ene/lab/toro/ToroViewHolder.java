@@ -188,6 +188,7 @@ public abstract class ToroViewHolder extends ToroAdapter.ViewHolder implements T
       return 0.f;
     }
 
+    // Gonna use rectangle's area for better evaluation
     return getVideoView().getHeight() <= 0 ? 1.f
         : videoRect.height() / (float) getVideoView().getHeight();
   }

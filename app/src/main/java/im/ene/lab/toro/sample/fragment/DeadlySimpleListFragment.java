@@ -35,6 +35,7 @@ import im.ene.lab.toro.ToroViewHolder;
 import im.ene.lab.toro.sample.R;
 import im.ene.lab.toro.sample.data.SimpleVideoObject;
 import im.ene.lab.toro.sample.data.VideoSource;
+import im.ene.lab.toro.sample.viewholder.SampleExoMediaViewHolder;
 import im.ene.lab.toro.sample.widget.DividerItemDecoration;
 import im.ene.lab.toro.widget.ToroVideoView;
 import java.util.ArrayList;
@@ -176,7 +177,7 @@ public class DeadlySimpleListFragment extends Fragment {
     }
   }
 
-  private static class Adapter extends ToroAdapter<SimpleViewHolder> {
+  private static class Adapter extends ToroAdapter<SampleExoMediaViewHolder> {
 
     protected List<SimpleVideoObject> mVideos = new ArrayList<>();
 
@@ -192,10 +193,10 @@ public class DeadlySimpleListFragment extends Fragment {
       return mVideos.get(position % mVideos.size());
     }
 
-    @Override public SimpleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    @Override public SampleExoMediaViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
       View view = LayoutInflater.from(parent.getContext())
-          .inflate(SimpleViewHolder.LAYOUT_RES, parent, false);
-      return new SimpleViewHolder(view);
+          .inflate(SampleExoMediaViewHolder.LAYOUT_RES, parent, false);
+      return new SampleExoMediaViewHolder(view);
     }
 
     @Override public int getItemCount() {
