@@ -16,7 +16,6 @@
 
 package im.ene.lab.toro;
 
-import android.graphics.Rect;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.support.annotation.CallSuper;
@@ -105,20 +104,12 @@ public abstract class AbsVideoViewHolder extends ToroViewHolder {
 
   @Override public int getAudioSessionId() {
     if (mVideoView != null) {
-      return mVideoView.getAudioSessionId();
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+        return mVideoView.getAudioSessionId();
+      }
     }
 
     return 0;
-  }
-
-  @Override public float visibleAreaOffset() {
-    Rect videoRect = getVideoRect();
-    Rect parentRect = getRecyclerViewRect();
-    if (parentRect != null && !parentRect.contains(videoRect) && !parentRect.intersect(videoRect)) {
-      return 0.f;
-    }
-
-    return mVideoView.getHeight() <= 0 ? 1.f : videoRect.height() / (float) mVideoView.getHeight();
   }
 
   @Override public boolean wantsToPlay() {
@@ -134,8 +125,9 @@ public abstract class AbsVideoViewHolder extends ToroViewHolder {
     mPlayable = true;
   }
 
-  @Override public void onPlaybackError(MediaPlayer mp, int what, int extra) {
+  @Override public boolean onPlaybackError(MediaPlayer mp, int what, int extra) {
     mPlayable = false;
+    return true;
   }
 
   @NonNull @Override public View getVideoView() {

@@ -160,8 +160,8 @@ public abstract class ToroViewHolder extends ToroAdapter.ViewHolder implements T
 
   }
 
-  @Override public void onPlaybackError(MediaPlayer mp, int what, int extra) {
-
+  @Override public boolean onPlaybackError(MediaPlayer mp, int what, int extra) {
+    return false;
   }
 
   @Override public void onPlaybackInfo(MediaPlayer mp, int what, int extra) {

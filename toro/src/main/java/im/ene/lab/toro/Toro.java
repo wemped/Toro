@@ -25,9 +25,12 @@ import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewParent;
+import android.view.ViewTreeObserver;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -87,6 +90,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
   // Default strategy
   private ToroStrategy mStrategy = Strategies.MOST_VISIBLE_TOP_DOWN;
+
+  private View mCurrentFocus = null;
+
+  private final ViewTreeObserver.OnGlobalFocusChangeListener globalFocusChangeListener =
+      new ViewTreeObserver.OnGlobalFocusChangeListener() {
+        @Override public void onGlobalFocusChanged(View oldFocus, View newFocus) {
+          if (newFocus != mCurrentFocus) {
+            mCurrentFocus = newFocus;
+            notifyFocusChanged(mCurrentFocus);
+          }
+        }
+      };
 
   /**
    * Attach an activity to Toro. Toro register activity's life cycle to properly handle Screen
@@ -294,6 +309,33 @@ import java.util.concurrent.ConcurrentHashMap;
     }
   }
 
+  private static final String TAG = "Toro";
+
+  private static void notifyFocusChanged(@Nullable View currentFocus) {
+    if (currentFocus == null) {
+      // TODO check current player and deal with it.
+      return;
+    }
+
+    Rect fsRect = new Rect(); // focused view's global rect
+    currentFocus.getGlobalVisibleRect(fsRect);
+    RecyclerView recyclerView = null;
+    Rect rvRect = new Rect();
+    for (RecyclerView view : sInstance.mViews.values()) {
+      view.getGlobalVisibleRect(rvRect);
+      if (fsRect.contains(rvRect) || rvRect.contains(fsRect) || fsRect.intersect(rvRect)) {
+        recyclerView = view;
+        break;
+      }
+    }
+
+    if (recyclerView == null) {
+      return;
+    }
+
+    Log.i(TAG, recyclerView + " | " + rvRect + " | " + fsRect);
+  }
+
   private static void notifyStrategyChanged(ToroStrategy newStrategy) {
     for (RecyclerView view : sInstance.mViews.values()) {
       int hash = view.hashCode();
@@ -379,7 +421,7 @@ import java.util.concurrent.ConcurrentHashMap;
   }
 
   final boolean onError(ToroPlayer player, MediaPlayer mp, int what, int extra) {
-    player.onPlaybackError(mp, what, extra);
+    boolean handle = player.onPlaybackError(mp, what, extra);
     for (ToroScrollListener listener : sInstance.mListeners.values()) {
       VideoPlayerManager manager = listener.getManager();
       if (player.equals(manager.getPlayer())) {
@@ -388,7 +430,7 @@ import java.util.concurrent.ConcurrentHashMap;
         return true;
       }
     }
-    return false;
+    return handle;
   }
 
   final boolean onInfo(ToroPlayer player, MediaPlayer mp, int what, int extra) {
@@ -401,6 +443,12 @@ import java.util.concurrent.ConcurrentHashMap;
   }
 
   @Override public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+    // get root content
+    View rootView = activity.findViewById(android.R.id.content);
+    if (rootView != null) {
+      rootView.getViewTreeObserver().addOnGlobalFocusChangeListener(globalFocusChangeListener);
+    }
+
     if (mStates == null) {
       mStates = new LinkedStateList(3);
     }
@@ -478,6 +526,12 @@ import java.util.concurrent.ConcurrentHashMap;
       }
 
       mStates.clear();
+    }
+
+    // get root content
+    View rootView = activity.findViewById(android.R.id.content);
+    if (rootView != null) {
+      rootView.getViewTreeObserver().removeOnGlobalFocusChangeListener(globalFocusChangeListener);
     }
   }
 
